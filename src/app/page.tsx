@@ -3,6 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardAction, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { FilesetResolver, ObjectDetector } from "@mediapipe/tasks-vision";
+import Link from "next/link";
 import { useEffect, useRef, useState } from "react"
 
 function speakText(text: string): Promise<void> {
@@ -64,7 +65,7 @@ export default function Home() {
 
   const renderLoop = async () => {
     if (cont.current) {
-      const animationFrameId = videoRef.current?.requestVideoFrameCallback(renderLoop);
+      videoRef.current?.requestVideoFrameCallback(renderLoop);
     }
     if (ttsBusy.current) { return false }
     const video = videoRef.current;
@@ -76,13 +77,19 @@ export default function Home() {
     console.log("video.currentTime", video.currentTime);
     const lastVideoTime = lastVideoTimeRef.current;
 
-    const detections = objectDetector.current.detectForVideo(video, video.currentTime).detections;
-    // setLatestDetection(JSON.stringify(detections['detections'][0]?.categories[0].categoryName))
     ttsBusy.current = true
-    await speakText(countAndFormatItemsToString(detections.map(det => {
+    const detections = objectDetector.current.detectForVideo(video, video.currentTime).detections;
+    const resText = countAndFormatItemsToString(detections.map(det => {
       return det.categories[0].categoryName
-    })))
+    }))
+    setLatestDetection(resText)
+    await speakText(resText)
     ttsBusy.current = false
+  }
+
+  const start = () => {
+    cont.current = true;
+    videoRef.current?.requestVideoFrameCallback(renderLoop);
   }
 
   useEffect(() => {
@@ -129,24 +136,39 @@ export default function Home() {
 
   }, [videoRef])
 
-
-  // if (!ready) {
-  //   return <>Not ready</>
-  // }
-
   return (
     <>
-      <Button onClick={() => cont.current = false}>Stop</Button>
-      <Button onClick={() => speakText('hello how are you')}>Stop</Button>
-      {latestDetection ? <p>{latestDetection}</p> : <></>}
-      <video
-        ref={videoRef}
-        autoPlay
-        playsInline
-        muted
-        width="100%"
-        height="100%"
-        style={{ objectFit: 'cover' }} />
+      <main className="flex min-h-screen flex-col items-center justify-start">
+        <h1 className="m-5 text-center text-4xl font-extrabold tracking-tight text-balance">
+          Vision Orator: Object Detection and Text-to-Speech
+        </h1>
+        <Card className="md:w-3/5">
+          <CardHeader>
+            <CardTitle>Card Title</CardTitle>
+          </CardHeader>
+          <CardDescription>
+            <p className="pl-4">
+              {latestDetection}
+            </p>
+          </CardDescription>
+          <CardContent>
+            <video
+              ref={videoRef}
+              autoPlay
+              playsInline
+              muted
+              width="100%"
+              height="100%"
+              style={{ objectFit: 'cover' }} />
+          </CardContent>
+          <CardFooter>
+
+            <Button onClick={start} className="mr-1">Start</Button>
+            <Button onClick={() => cont.current = false}>Stop</Button>
+            <Button className="ml-5"><Link href={"/signOrator"}>Sign Language Detection</Link></Button>
+          </CardFooter>
+        </Card>
+      </main>
     </>
   );
 }
