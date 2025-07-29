@@ -55,7 +55,6 @@ export default function Home() {
 
   const cont = useRef(true)
   const videoRef = useRef<HTMLVideoElement | null>(null);
-  // const canvasRef = useRef<HTMLCanvasElement | null>(null)
   const lastVideoTimeRef = useRef(-1)
   const objectDetector = useRef<ObjectDetector | null>(null)
   const ttsBusy = useRef(false);
@@ -70,9 +69,6 @@ export default function Home() {
     if (ttsBusy.current) { return false }
     const video = videoRef.current;
     if (video === null) { return }
-    // if (canvasRef.current === null) { return }
-    // const ctx = canvasRef.current.getContext('2d')
-    // if (ctx === null) { return }
     if (objectDetector.current === null) { return }
     console.log("video.currentTime", video.currentTime);
     const lastVideoTime = lastVideoTimeRef.current;
@@ -95,25 +91,22 @@ export default function Home() {
   useEffect(() => {
     const effect = async () => {
       const mediaStream = await navigator.mediaDevices.getUserMedia({
-        video: { width: 1280, height: 720 }, // Desired video resolution
+        video: { width: 1280, height: 720 },
       });
       console.log("MediaStream:", mediaStream);
       setMediaStream(mediaStream);
       if (videoRef.current
-        // && canvasRef.current
+
       ) {
         videoRef.current.srcObject = mediaStream;
         videoRef.current.onloadedmetadata = () => {
           videoRef.current?.play();
         };
         videoRef.current?.requestVideoFrameCallback(() => renderLoop());
-        // canvasRef.current.width = videoRef.current.width
-        // canvasRef.current.height = videoRef.current.height
       }
 
 
       const vision = await FilesetResolver.forVisionTasks(
-        // path/to/wasm/root
         "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm"
       );
       objectDetector.current = await ObjectDetector.createFromOptions(vision, {
